@@ -113,23 +113,25 @@ const BZ=[-9,9,-44,-26];
 for(let i=0;i<6;i++)for(let j=0;j<6;j++)lbox(0,-9+i*3,-6+i*3,26+j*3,29+j*3,.03,[0xff6bd6,0xffd23f,0x4ecdc4][(i+j)%3],.05,false);
 [[-7,-28,0x4d96ff],[7,-28,0xffd23f],[-7,-42,0x6bcb77],[7,-42,0xff7a00]].forEach(c=>{mesh(new T.SphereGeometry(1.3,16,12),c[2],c[0],1.3,c[1]);circ.push([c[0],c[1],1.3])});
 // lounge (south room): couches, a coffee table, side tables and stools. Press C near a seat to sit.
-const seats=[];let sitSeat=null;
+const seats=[];let sitSeat=null;const sitOff=()=>sitSeat?(sitSeat[3]||.62)-.7:0;const taken=q=>{const i=seats.indexOf(q);return Object.values(R).some(r=>r.t&&r.t.st===i)};
 const LW=(u,v)=>M(2,u,v);
-function seat(u,v,du,dv){const w=LW(u,v);seats.push([w[0],w[1],Math.atan2(du,-dv)])}
-function couch(u0,u1,v0,v1,backHigh,col){lbox(2,u0,u1,v0,v1,.5,col,0,true);backHigh?lbox(2,u0,u1,v1-.5,v1,1.2,col,0,true):lbox(2,u0,u1,v0,v0+.5,1.2,col,0,true);lbox(2,u0,u0+.4,v0,v1,.9,col,0,true);lbox(2,u1-.4,u1,v0,v1,.9,col,0,true)}
-couch(-8,-2,40,43,true,0xe85d75);seat(-6,41,0,-1);seat(-4,41,0,-1);
-couch(2,8,40,43,true,0x3d7bff);seat(4,41,0,-1);seat(6,41,0,-1);
-couch(-8,-2,29,32,false,0xffb347);seat(-6,31,0,1);seat(-4,31,0,1);
-couch(2,8,29,32,false,0x2fb5a8);seat(4,31,0,1);seat(6,31,0,1);
+function seat(u,v,du,dv,sy){const w=LW(u,v);seats.push([w[0],w[1],Math.atan2(du,-dv),sy||.62])}
+function couch(u0,u1,v0,v1,backHigh,col){lbox(2,u0,u1,v0,v1,.5,col,0,true);backHigh?lbox(2,u0,u1,v1-.5,v1,1.2,col,0,true):lbox(2,u0,u1,v0,v0+.5,1.2,col,0,true);lbox(2,u0,u0+.4,v0,v1,.9,col,0,true);lbox(2,u1-.4,u1,v0,v1,.9,col,0,true);
+ const cc=new T.Color(col).lerp(new T.Color(0xffffff),.25).getHex(),w=(u1-u0-.8)/3,cv0=backHigh?v0:v0+.5,cv1=backHigh?v1-.5:v1,sv=(cv0+cv1)/2;
+ for(let i=0;i<3;i++){lbox(2,u0+.4+i*w+.03,u0+.4+(i+1)*w-.03,cv0,cv1,.12,cc,.5,false);seat(u0+.4+(i+.5)*w,sv,0,backHigh?-1:1,.62)}}
+couch(-8,-2,40,43,true,0xe85d75);
+couch(2,8,40,43,true,0x3d7bff);
+couch(-8,-2,29,32,false,0xffb347);
+couch(2,8,29,32,false,0x2fb5a8);
 lbox(2,-2.5,2.5,34,37,.1,0x8d5a2b,.45,true);lbox(2,-.4,.4,35,36,.45,0x5e3b1c,0,false);
 [-6,6].forEach(u=>{const w=LW(u,35.5);mesh(new T.CylinderGeometry(1,1,.12,20),0xf4e3c1,w[0],.9,w[1]);mesh(new T.CylinderGeometry(.12,.12,.9,8),0x555555,w[0],.45,w[1]);circ.push([w[0],w[1],1]);
- [[33.1,1],[37.9,-1]].forEach(([v,d])=>{const q=LW(u,v);mesh(new T.CylinderGeometry(.38,.38,.55,12),0xff7a00,q[0],.275,q[1]);circ.push([q[0],q[1],.38]);seat(u,v,0,d)})});
+ [[33.1,1],[37.9,-1]].forEach(([v,d])=>{const q=LW(u,v);mesh(new T.CylinderGeometry(.38,.38,.55,12),0xff7a00,q[0],.275,q[1]);circ.push([q[0],q[1],.38]);seat(u,v,0,d,.55)})});
 function toggleSit(){if(sitSeat){const q=sitSeat;sitSeat=null;P.x=q[0]-Math.sin(q[2])*1.1;P.z=q[1]-Math.cos(q[2])*1.1;return}
- let best=null,bd=2.6;for(const q of seats){const d=Math.hypot(P.x-q[0],P.z-q[1]);if(d<bd){bd=d;best=q}}
+ let best=null,bd=2.6;for(const q of seats){const d=Math.hypot(P.x-q[0],P.z-q[1]);if(d<bd&&!taken(q)){bd=d;best=q}}
  if(best)sitAt(best);else addLog('','Look at a couch or stool and right-click to sit.')}
 function sitAt(q){sitSeat=q;P.x=q[0];P.z=q[1];P.yaw=q[2];P.pitch=0;P.vy=0;P.y=0;addLog('','Sitting. Right-click or move to stand up.')}
 function sitLook(){const fw=fwd();let best=null,bs=-1;
- for(const q of seats){const d=new T.Vector3(q[0]-P.x,.4-(P.y+1.6),q[1]-P.z),L=d.length();if(L>5)continue;const dot=d.normalize().dot(fw);if((L<1.4||dot>.8)&&dot>bs){bs=dot;best=q}}
+ for(const q of seats){const d=new T.Vector3(q[0]-P.x,.4-(P.y+1.6),q[1]-P.z),L=d.length();if(L>5||taken(q))continue;const dot=d.normalize().dot(fw);if((L<1.4||dot>.8)&&dot>bs){bs=dot;best=q}}
  if(best)sitAt(best);else addLog('','Look at a couch or stool and right-click to sit.')}
 // dance floor
 const tiles=[];for(let i=0;i<16;i++){tiles.push(mesh(new T.BoxGeometry(2.9,.06,2.9),0xffffff,-39.5+(i%4)*3,.06,-4.5+(i/4|0)*3))}
@@ -186,7 +188,7 @@ pane(-7.95,-7.75,DZ-3.2,DZ+3.2,4.7,.2,0xf4efe6);pane(-8,-7.5,DZ-3.3,DZ+3.3,1.45,
 pane(-7.9,-7.6,DZ-3.7,DZ-3.2,1.3,3.8,0xff6b9a);pane(-7.9,-7.6,DZ+3.2,DZ+3.7,1.3,3.8,0xff6b9a);
 // bed (north wall), nightstand with glowing lamp
 box(3,6.4,DZ-7,DZ-2,.5,0x8a5a2b,0,true);box(3.1,6.3,DZ-6.9,DZ-2.1,.35,0xf2f2f2,.5,false);box(3.1,6.3,DZ-5,DZ-2.1,.42,0x4d96ff,.5,false);box(3,6.4,DZ-7,DZ-6.8,1.7,0x8a5a2b,0,false);
-box(3.4,4.6,DZ-6.7,DZ-5.6,.28,0xffffff,.85,false);box(4.9,6.1,DZ-6.7,DZ-5.6,.28,0xffffff,.85,false);seats.push([4.7,DZ-3,Math.PI]);
+box(3.4,4.6,DZ-6.7,DZ-5.6,.28,0xffffff,.85,false);box(4.9,6.1,DZ-6.7,DZ-5.6,.28,0xffffff,.85,false);seats.push([4.0,DZ-3,Math.PI,.92],[5.4,DZ-3,Math.PI,.92]);
 box(6.6,7.9,DZ-7,DZ-5.7,.8,0x6c4f3d,0,true);const lamp=new T.Mesh(new T.CylinderGeometry(.18,.3,.4,12),new T.MeshBasicMaterial({color:0xffe08a}));lamp.position.set(7.25,1,DZ-6.35);scene.add(lamp);
 const hs=label('HOME SWEET DORM',4.2,'#2b3a8c');hs.position.set(4.7,4.3,DZ-6.5);scene.add(hs);
 // dresser + mirror (east wall), shelves with trophies and books, posters (north wall)
@@ -218,8 +220,8 @@ function updateMirror(){
  _q.x=(Math.sign(_cl.x)+pm.elements[8])/pm.elements[0];_q.y=(Math.sign(_cl.y)+pm.elements[9])/pm.elements[5];_q.z=-1;_q.w=(1+pm.elements[10])/pm.elements[14];
  _cl.multiplyScalar(2/_cl.dot(_q));
  pm.elements[2]=_cl.x;pm.elements[6]=_cl.y;pm.elements[10]=_cl.z+1-.003;pm.elements[14]=_cl.w;
- me.visible=true;me.position.set(P.x,P.y-(sitSeat?.5:0),P.z);me.rotation.y=P.yaw;me.userData.m.color.set(col);
- const {L,Rr}=me.userData;L.position.set(-.45,.85,-.1);Rr.position.set(.45,.85,-.1);if(clock-myWT<1.6)Rr.position.set(.5,1.7+Math.sin(clock*12)*.1,-.1);
+ me.visible=true;me.position.set(P.x,P.y+sitOff(),P.z);me.rotation.y=P.yaw;me.userData.m.color.set(col);
+ const {L,Rr,legs}=me.userData;legs.visible=!!sitSeat;L.position.set(-.45,.85,-.1);Rr.position.set(.45,.85,-.1);if(sitSeat){L.position.set(-.32,.75,-.4);Rr.position.set(.32,.75,-.4)}if(clock-myWT<1.6)Rr.position.set(.5,1.7+Math.sin(clock*12)*.1,-.1);
  mir.visible=false;const cur=ren.getRenderTarget();ren.setRenderTarget(mrt);ren.clear();ren.render(scene,mcam);ren.setRenderTarget(cur);mir.visible=true;me.visible=false}
 pane(7.84,7.9,DZ-1.7,DZ+1.7,4.6,.2,0xffc83d);pane(7.84,7.9,DZ-1.7,DZ+1.7,.3,.2,0xffc83d);pane(7.84,7.9,DZ-1.7,DZ-1.5,.3,4.5,0xffc83d);pane(7.84,7.9,DZ+1.5,DZ+1.7,.3,4.5,0xffc83d);
 const ml=label('MIRROR: right-click',3.6,'#7a4dff');ml.position.set(7.2,5.05,DZ);scene.add(ml);
@@ -236,7 +238,7 @@ for(let n=0;n<5;n++){mesh(new T.CylinderGeometry(.12,.2,.5,8),0xffc83d,-5.5+n*1.
 pane(-0.5,1.5,DZ-7,DZ-6.92,2.2,2,0xff3d81);pane(1.9,2.7,DZ-7,DZ-6.92,2.6,1.4,0xffd23f);
 // rug, beanbags (sit with right-click), door back to the Rec Center (south wall)
 mesh(new T.CylinderGeometry(2.6,2.6,.04,32),0xff7a59,0,.02,DZ+.5);mesh(new T.CylinderGeometry(1.7,1.7,.04,32),0xffd23f,0,.035,DZ+.5);
-[[-4.5,DZ+3,0xff3d81],[4.5,DZ+3.5,0x2fb5a8]].forEach(b=>{const m=mesh(new T.SphereGeometry(.9,14,10),b[2],b[0],.5,b[1]);m.scale.y=.6;circ.push([b[0],b[1],.9]);seats.push([b[0],b[1],Math.atan2(b[0],-(DZ+.5-b[1]))])});
+[[-4.5,DZ+3,0xff3d81],[4.5,DZ+3.5,0x2fb5a8]].forEach(b=>{const m=mesh(new T.SphereGeometry(.9,14,10),b[2],b[0],.5,b[1]);m.scale.y=.6;circ.push([b[0],b[1],.9]);seats.push([b[0],b[1],Math.atan2(b[0],-(DZ+.5-b[1])),.85])});
 box(-1.2,1.2,DZ+6.84,DZ+7,3.6,0x4d96ff,0,false);pane(-1.5,-1.2,DZ+6.8,DZ+7,0,3.9,0xffd23f);pane(1.2,1.5,DZ+6.8,DZ+7,0,3.9,0xffd23f);pane(-1.5,1.5,DZ+6.8,DZ+7,3.6,.3,0xffd23f);
 mesh(new T.SphereGeometry(.12,10,8),0xffc83d,.8,1.8,DZ+6.8);
 const dr=label('REC CENTER',3.4,'#2b3a8c');dr.position.set(0,4.55,DZ+6.6);scene.add(dr);
@@ -255,7 +257,9 @@ function mkAvatar(c){const g=new T.Group(),m=mat(c);
  [-.1,.1].forEach(x=>{const e=new T.Mesh(new T.SphereGeometry(.065,10,8),mat(0xffffff));e.position.set(x,-.01,-.23);e.scale.z=.5;head.add(e);const q=new T.Mesh(new T.SphereGeometry(.035,8,6),mat(0x222222));q.position.set(x,-.01,-.27);head.add(q)});
  const sm=new T.Mesh(new T.TorusGeometry(.09,.016,6,14,Math.PI),mat(0x6b2d2d));sm.rotation.z=Math.PI;sm.position.set(0,-.09,-.26);head.add(sm);
  const cap=new T.Mesh(new T.SphereGeometry(.295,18,10,0,Math.PI*2,0,Math.PI/2),m);cap.position.y=.1;head.add(cap);
- const L=new T.Mesh(new T.SphereGeometry(.11,12,10),mat(0xffffff)),Rr=L.clone();g.add(L,Rr);g.userData={L,Rr,m};scene.add(g);return g}
+ const L=new T.Mesh(new T.SphereGeometry(.11,12,10),mat(0xffffff)),Rr=L.clone();g.add(L,Rr);
+ const legs=new T.Group(),pm=mat(0x3a4a7a);[-.13,.13].forEach(x=>{const th=new T.Mesh(new T.CylinderGeometry(.1,.1,.5,10),pm);th.rotation.x=Math.PI/2;th.position.set(x,.62,-.3);legs.add(th);const sh=new T.Mesh(new T.CylinderGeometry(.09,.08,.55,10),pm);sh.position.set(x,.35,-.55);legs.add(sh);const ft=new T.Mesh(new T.BoxGeometry(.16,.08,.26),mat(0xffffff));ft.position.set(x,.08,-.62);legs.add(ft)});legs.visible=false;g.add(legs);
+ g.userData={L,Rr,m,legs};scene.add(g);return g}
 const R={};
 function tag(r,txt){if(r.txt===txt)return;r.txt=txt;if(r.tag){r.g.remove(r.tag);r.tag.material.map.dispose();r.tag.material.dispose()}r.tag=label(txt,1.6);r.tag.position.y=2.2;r.g.add(r.tag)}
 // ---------- player ----------
@@ -354,7 +358,7 @@ function sync(ch){const me=room.peers().find(p=>p.isMe&&p.sameTab);if(me)myId=me
  $('info').textContent='🟢 Online · '+(Object.keys(R).length+1)+' in plaza';voiceSync()}
 let last='',tPub=0,tForce=0;
 function pub(t,force){if(!room||!started)return;if(!force&&t-tPub<66)return;tPub=t;
- const o={x:+P.x.toFixed(2),y:+(P.y-(sitSeat?.5:0)).toFixed(2),z:+P.z.toFixed(2),r:+P.yaw.toFixed(2),c:col,n:name,vc:mic?1:0,mu:muted?1:0,w:waves,dm:inDorm?1:0,bl:ballPub()},j=JSON.stringify(o);
+ const o={x:+P.x.toFixed(2),y:+(P.y+sitOff()).toFixed(2),z:+P.z.toFixed(2),r:+P.yaw.toFixed(2),c:col,n:name,vc:mic?1:0,mu:muted?1:0,w:waves,dm:inDorm?1:0,st:sitSeat?seats.indexOf(sitSeat):-1,bl:ballPub()},j=JSON.stringify(o);
  if(j!==last||t-tForce>2000){last=j;tForce=t;room.presence(o).catch(()=>{})}}
 // ---- networking: PeerJS public broker. First player claims the LOBBY id and relays state; everyone else joins it. ----
 const LOBBY='recplaza-lobby-k7q2x9';
@@ -418,7 +422,7 @@ function tick(now){requestAnimationFrame(tick);const dt=Math.min(.05,(now-prev)/
   if(K.Space&&P.y<=0.001)P.vy=7.5}
  P.vy-=22*dt;P.y+=P.vy*dt;if(P.y<0){P.y=0;P.vy=(P.x>BZ[0]&&P.x<BZ[1]&&P.z>BZ[2]&&P.z<BZ[3])?Math.min(25,Math.max(16,-P.vy*1.02+(K.Space?2.5:0))):0}
  if(sitSeat){P.x=sitSeat[0];P.z=sitSeat[1]}else collide(P);
- cam.position.set(P.x,P.y+(sitSeat?1.05:1.6),P.z);cam.rotation.set(P.pitch,P.yaw,0);
+ cam.position.set(P.x,P.y+1.6+sitOff(),P.z);cam.rotation.set(P.pitch,P.yaw,0);
  
  disco.rotation.y+=dt*.8;{const a=clock*1.3;dLight.position.set(-35+Math.cos(a)*2.5,8,Math.sin(a)*2.5);dLight.color.setHSL((clock*.15)%1,1,.6);disco.material.emissive.setHSL((clock*.3)%1,.6,.25);glow.material.opacity=.7+Math.sin(clock*6)*.25;glow.scale.setScalar(5+Math.sin(clock*6)*.6)}
  tiles.forEach((t,i)=>t.material.color.setHSL((clock*.2+i*.11)%1,.8,.55));
@@ -426,9 +430,9 @@ function tick(now){requestAnimationFrame(tick);const dt=Math.min(.05,(now-prev)/
   g.position.x+=(d.x-g.position.x)*k;g.position.y+=(d.y-g.position.y)*k;g.position.z+=(d.z-g.position.z)*k;
   let dr=(d.r||0)-g.rotation.y;dr=Math.atan2(Math.sin(dr),Math.cos(dr));g.rotation.y+=dr*k;
   const v=Math.hypot(g.position.x-r.px,g.position.z-r.pz)/Math.max(dt,.001);r.px=g.position.x;r.pz=g.position.z;r.sp+=(Math.min(v,8)-r.sp)*.2;
-  const sw=Math.sin(clock*10)*Math.min(r.sp,6)*.06,w=clock-r.wt<1.6,{L,Rr}=g.userData;
+  const sw=Math.sin(clock*10)*Math.min(r.sp,6)*.06,w=clock-r.wt<1.6,{L,Rr,legs}=g.userData;
   L.position.set(-.45,.85,-.1+sw);Rr.position.set(.45,.85,-.1-sw);
-  if(w)Rr.position.set(.5,1.7+Math.sin(clock*12)*.1,-.1);
+  legs.visible=d.st>=0;if(d.st>=0){L.position.set(-.32,.75,-.4);Rr.position.set(.32,.75,-.4)}if(w)Rr.position.set(.5,1.7+Math.sin(clock*12)*.1,-.1);
   g.visible=!d.dm;const dist=Math.hypot(P.x-g.position.x,P.z-g.position.z),o=pcs[id];if(o&&o.audio)o.audio.volume=(inDorm||d.dm)?0:Math.max(0,Math.min(1,1-(dist-4)/26))}
  stepBalls(dt);updateMirror();pub(now);ren.render(scene,cam)}
 requestAnimationFrame(tick);

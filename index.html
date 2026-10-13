@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>PlaySpace</title>
+  <title>Rec Center</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap">
   <style>
     :root {
@@ -223,31 +223,7 @@
       transform: scale(1.15)
     }
   </style>
-  <script>
-    async function checkForUpdate() {
-      const updateLabel = document.getElementById('updateLabel');
-      const url = `https://rec-center.onrender.com/update`;
-      try {
-        const response = await fetch(url);
-        if (response.status === 200) {
-          console.log('Update available.');
-          updateLabel.style.display = 'block';
-          updateLabelDesc.style.display = 'block';
-        } else if (response.status === 204) {
-          console.log('No update available.');
-          updateLabel.style.display = 'none';
-          updateLabelDesc.style.display = 'none';
-        } else {
-          console.error('Error checking for update:', response.statusText);
-        }
-      } catch (error) {
-        console.error('Error checking for update:', error);
-      }
-    }
-    checkForUpdate();
-  </script>
 </head>
-
 <body>
   <div id="info" class="p">Loading…</div>
   <div id="dot"></div>
@@ -278,6 +254,31 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script>
+        async function checkForUpdate() {
+      const updateLabel = document.getElementById('updateLabel');
+      const url = `https://rec-center.onrender.com/update`;
+      try {
+        const response = await fetch(url);
+        if (response.status === 200) {
+          console.log('Update available.');
+          updateLabel.style.display = 'block';
+          updateLabelDesc.style.display = 'block';
+        } else if (response.status === 204) {
+          console.log('No update available.');
+          updateLabel.style.display = 'none';
+          updateLabelDesc.style.display = 'none';
+        } else {
+          console.error('Error checking for update:', response.statusText);
+          updateLabel.style.display = 'none';
+          updateLabelDesc.style.display = 'none';
+        }
+      } catch (error) {
+        console.error('Error checking for update:', error);
+        updateLabel.style.display = 'none';
+        updateLabelDesc.style.display = 'none';
+      }
+    }
+    checkForUpdate();
     (async () => {
       const T = THREE, $ = i => document.getElementById(i);
       const COLS = [0xff6b35, 0x4ecdc4, 0xb08cff, 0xffc857, 0xff6b9a, 0x6bcB77, 0x4d96ff, 0xe8e8e8];
